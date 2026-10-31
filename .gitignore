@@ -1,0 +1,27 @@
+# =============================================
+# Online Shopping — Root .gitignore
+# =============================================
+
+# Environment variables — NEVER commit secrets
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Docker volumes
+cassandra_data/
+

@@ -1,0 +1,27 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Compiled
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+spring.log
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+

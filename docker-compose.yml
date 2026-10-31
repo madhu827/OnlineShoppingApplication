@@ -1,0 +1,74 @@
+# =====================================================
+# Docker Compose for Online Shopping local development
+# =====================================================
+# Starts Apache Cassandra only.
+# MongoDB runs on Atlas (cloud) — no local container needed.
+#
+# Usage:
+#   docker compose up -d cassandra
+#   docker compose logs -f cassandra   (watch startup)
+#   docker compose down                (stop)
+# =====================================================
+
+services:
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb-shopping
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra-shopping
+    ports:
+      - "9043:9042"       # host 9043 → container 9042 (avoids conflict with local Cassandra)
+      - "9161:9160"       # Thrift
+    environment:
+      CASSANDRA_CLUSTER_NAME:    "OnlineShoppingCluster"
+      CASSANDRA_DC:              datacenter1
+      CASSANDRA_RACK:            rack1
+      CASSANDRA_ENDPOINT_SNITCH: SimpleSnitch
+      # Allow the Spring app (localhost) to connect
+      CASSANDRA_BROADCAST_ADDRESS: 127.0.0.1
+      # Limit memory for local dev
+      MAX_HEAP_SIZE: "512M"
+      HEAP_NEWSIZE:  "128M"
+    volumes:
+      # Persist Cassandra data between container restarts
+      - cassandra_data:/var/lib/cassandra
+      # Auto-run keyspace creation on first startup
+      - ./cassandra-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── Cassandra Studio (optional visual UI) ──────────────────────────────
+  cassandra-web:
+    image: ipushc/cassandra-web:latest
+    container_name: cassandra-web
+    ports:
+      - "3001:3001"
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - tools   # Only starts when: docker compose --profile tools up
+
+volumes:
+  cassandra_data:
+    driver: local
+  mongo_data:
+    driver: local
+
